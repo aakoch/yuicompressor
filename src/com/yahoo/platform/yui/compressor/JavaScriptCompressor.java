@@ -680,8 +680,8 @@ public class JavaScriptCompressor {
             if (token.getType() == Token.NAME && mode == BUILDING_SYMBOL_TREE) {
                 symbol = token.getValue();
                 identifier = fnScope.declareIdentifier(symbol);
-                if (symbol.equals("$super") && argpos == 0) {
-                    // Exception for Prototype 1.6...
+                if (symbol.charAt(0) == '$') {
+                    // Exception for Prototype 1.6 and possibly others
                     identifier.preventMunging();
                 }
                 argpos++;
