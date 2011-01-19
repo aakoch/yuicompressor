@@ -8,3 +8,6 @@ CVS/
 *~
 # Ignore Emacs auto saved files
 *#*#
+/.classpath
+/.project
+/.settings
