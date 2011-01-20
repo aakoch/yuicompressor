@@ -257,6 +257,8 @@ public class CssCompressor {
         }
         m.appendTail(sb);
         css = sb.toString();
+        
+        css = convertUppercaseColorsToLowercase(css);
 
         // border: none -> border:0
         sb = new StringBuffer();
@@ -312,5 +314,18 @@ public class CssCompressor {
 
         // Write the output...
         out.write(css);
+    }
+
+    private String convertUppercaseColorsToLowercase(final String css) {
+        Pattern p =
+                Pattern
+                        .compile("#([0-9a-fA-F]){3}");
+        Matcher m = p.matcher(css);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            m.appendReplacement(sb, m.group(0).toLowerCase());
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 }
