@@ -23,35 +23,40 @@ public class CssCompressorTest {
             "c:\\projects\\yuicompressor\\src\\test\\resources\\";
     
     @Test
-    public void testRed() throws IOException {
+    public void testRed() {
         assertEquals("body{color:red}", compress("body{color:#f00}"));
     }
     
     @Test
-    public void testRedUppercase() throws IOException {
+    public void testRedUppercase() {
         assertEquals("body{color:red}", compress("body{color:#F00}"));
     }
     
     @Test
-    public void testBlueLowercase() throws IOException {
+    public void testBlueLowercase() {
         assertEquals("body{color:#0f0}", compress("body{color:#0f0}"));
     }
 
     @Test
-    public void testBlueUppercaseToLowercase() throws IOException {
+    public void testBlueUppercaseToLowercase() {
         assertEquals("body{color:#0f0}", compress("body{color:#0F0}"));
     }
 
     @Test
-    public void testUppercaseToLowercase() throws IOException {
+    public void testUppercaseToLowercase() {
         assertEquals("body{color:#0ff}", compress("body{color:#00FFFF}"));
     }
     
-    private String compress(String css) throws IOException {
+    private String compress(String css) {
         CssCompressor compressor = new CssCompressor(css);
         Writer out = new StringWriter();
         int linebreakpos = -1;
-        compressor.compress(out, linebreakpos);
+        try {
+            compressor.compress(out, linebreakpos);
+        }
+        catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
         return out.toString();
     }
 
