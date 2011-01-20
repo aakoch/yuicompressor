@@ -16,5 +16,19 @@
       <artifactId>js</artifactId>
       <version>1.6R7</version>
     </dependency>
+    <dependency>
+    	<groupId>junit</groupId>
+    	<artifactId>junit</artifactId>
+    	<version>4.7</version>
+    	<type>jar</type>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>junit-addons</groupId>
+    	<artifactId>junit-addons</artifactId>
+    	<version>1.4</version>
+    	<type>jar</type>
+    	<scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
