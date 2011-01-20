@@ -46,6 +46,11 @@ public class CssCompressorTest {
     public void testUppercaseToLowercase() {
         assertEquals("body{color:#0ff}", compress("body{color:#00FFFF}"));
     }
+
+    @Test
+    public void test6CharacterUppercaseToLowercase() {
+        assertEquals(".color{filter:chroma(color=\"#ffffff\")}", compress(".color{filter: chroma(color=\"#FFFFFF\");}"));
+    }
     
     private String compress(String css) {
         CssCompressor compressor = new CssCompressor(css);

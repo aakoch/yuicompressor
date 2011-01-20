@@ -308,6 +308,8 @@ public class CssCompressor {
             css = css.replace("___YUICSSMIN_PRESERVED_TOKEN_" + i + "___",
                         preservedTokens.get(i).toString());
         }
+        
+        css = convertPreservedColorsTokensFromUppercaseToLowercase(css);
 
         // Trim the final string (for any leading or trailing white spaces)
         css = css.trim();
@@ -317,15 +319,41 @@ public class CssCompressor {
     }
 
     private String convertUppercaseColorsToLowercase(final String css) {
-        Pattern p =
-                Pattern
-                        .compile("#([0-9a-fA-F]){3}");
-        Matcher m = p.matcher(css);
+        String newCss = css;
+        Pattern p = Pattern.compile("#([0-9a-fA-F]){3}");
+        Matcher m = p.matcher(newCss);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             m.appendReplacement(sb, m.group(0).toLowerCase());
         }
         m.appendTail(sb);
+        newCss = sb.toString();
+
+        p = Pattern.compile("#([0-9a-fA-F]){6}");
+        m = p.matcher(newCss);
+
+        sb.setLength(0);
+        sb.ensureCapacity(newCss.length());
+
+        while (m.find()) {
+            m.appendReplacement(sb, m.group(0).toLowerCase());
+        }
+        m.appendTail(sb);
+        newCss = sb.toString();
+
+        return newCss;
+    }
+
+    private String convertPreservedColorsTokensFromUppercaseToLowercase(final String css) {
+        Pattern p = Pattern.compile("#([0-9a-fA-F]){6}");;
+        Matcher m = p.matcher(css);
+        StringBuffer sb = new StringBuffer(css.length());
+
+        while (m.find()) {
+            m.appendReplacement(sb, m.group(0).toLowerCase());
+        }
+        m.appendTail(sb);
+
         return sb.toString();
     }
 }
