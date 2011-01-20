@@ -41,6 +41,11 @@ public class CssCompressorTest {
     public void testBlueUppercaseToLowercase() throws IOException {
         assertEquals("body{color:#0f0}", compress("body{color:#0F0}"));
     }
+
+    @Test
+    public void testUppercaseToLowercase() throws IOException {
+        assertEquals("body{color:#0ff}", compress("body{color:#00FFFF}"));
+    }
     
     private String compress(String css) throws IOException {
         CssCompressor compressor = new CssCompressor(css);
