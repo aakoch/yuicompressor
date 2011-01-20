@@ -28,6 +28,48 @@ public class CssCompressorTest {
     }
     
     @Test
+    public void testBlack() {
+        assertEquals("body{color:#000}", compress("body { color: black; }"));
+    }
+    
+
+    private String[][] colorsHexes = new String[][] { { "black", "000" }, { "magenta", "f0f" },
+            { "silver", "ccc" }, { "white", "fff" },
+            { "yellow", "ff0" }, { "fuchsia", "f0f" },
+            { "lightslategray", "789" } };
+    
+    
+    @Test
+    public void testMagenta() {
+        assertEquals("body{color:#f0f}", compress("body { color: magenta; }"));
+    }
+    
+    @Test
+    public void testSilver() {
+        assertEquals("body{color:#ccc}", compress("body { color: silver; }"));
+    }
+    
+    @Test
+    public void testWhite() {
+        assertEquals("body{color:#fff}", compress("body { color: white; }"));
+    }
+    
+    @Test
+    public void testYellow() {
+        assertEquals("body{color:#ff0}", compress("body { color: yellow; }"));
+    }
+    
+    @Test
+    public void testFuchsia() {
+        assertEquals("body{color:#f0f}", compress("body { color: fuchsia; }"));
+    }
+    
+    @Test
+    public void testLightSlateGray() {
+        assertEquals("body{color:#789}", compress("body { color: lightslategray; }"));
+    }
+    
+    @Test
     public void testRedUppercase() {
         assertEquals("body{color:red}", compress("body{color:#F00}"));
     }

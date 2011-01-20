@@ -11,6 +11,7 @@ package com.yahoo.platform.yui.compressor;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -234,6 +235,9 @@ public class CssCompressor {
         m.appendTail(sb);
         css = sb.toString();
 
+        // Replace color keywords with hex value
+        css = replaceColors(css);
+        
         // Shorten colors from #AABBCC to #ABC. Note that we want to make sure
         // the color is not preceded by either ", " or =. Indeed, the property
         //     filter: chroma(color="#FFFFFF");
@@ -316,6 +320,30 @@ public class CssCompressor {
 
         // Write the output...
         out.write(css);
+    }
+
+    final MessageFormat regexFormat =
+            new MessageFormat("(?i)(\\s+|:){0}(\\b|;)");
+    final MessageFormat replacementFormat = new MessageFormat("$1#{0}$2");
+    
+    String[][] colorsAndHexes =
+            new String[][] { { "black", "000" }, { "magenta", "f0f" },
+                    { "silver", "ccc" }, { "white", "fff" },
+                    { "yellow", "ff0" }, { "fuchsia", "f0f" },
+                    { "lightslategray", "789" } };
+    
+    private String replaceColors(String css) {
+        for (String[] colorAndHex : colorsAndHexes) {
+            css = replaceColor(css, colorAndHex[0], colorAndHex[1]);
+        }
+        return css;
+    }
+
+    private String replaceColor(String css, String color, String hex) {
+        String regex = regexFormat.format(new String[] { color });
+        String replacement = replacementFormat.format(new String[] { hex });
+        css = css.replaceAll(regex, replacement);
+        return css;
     }
 
     private String convertUppercaseColorsToLowercase(final String css) {
