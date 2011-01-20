@@ -17,20 +17,25 @@ import java.util.regex.Pattern;
 
 public class CssCompressor {
 
-    private StringBuffer srcsb = new StringBuffer();
+    private String css;
 
     public CssCompressor(Reader in) throws IOException {
+        StringBuffer srcsb = new StringBuffer();
         // Read the stream...
         int c;
         while ((c = in.read()) != -1) {
             srcsb.append((char) c);
         }
+        css = srcsb.toString();
+    }
+
+    public CssCompressor(String css) {
+        this.css = css;
     }
 
     public void compress(Writer out, int linebreakpos) throws IOException {
         Pattern p;
         Matcher m;
-        String css = srcsb.toString();
         StringBuffer sb = new StringBuffer(css);
 
         int startIndex = 0;
@@ -287,6 +292,10 @@ public class CssCompressor {
 
             css = sb.toString();
         }
+
+
+        // Replace #f00 with red
+        css = css.replaceAll("#f00", "red");
 
         // Replace multiple semi-colons in a row by a single one
         // See SF bug #1980989
