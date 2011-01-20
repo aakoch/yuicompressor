@@ -1,21 +1,31 @@
 /*
- * YUI Compressor
- * Author: Julien Lecomte - http://www.julienlecomte.net/
- * Copyright (c) 2009 Yahoo! Inc.  All rights reserved.
- * The copyrights embodied in the content of this file are licensed
- * by Yahoo! Inc. under the BSD (revised) open source license.
+ * YUI Compressor Author: Julien Lecomte - http://www.julienlecomte.net/
+ * Copyright (c) 2009 Yahoo! Inc. All rights reserved. The copyrights embodied
+ * in the content of this file are licensed by Yahoo! Inc. under the BSD
+ * (revised) open source license.
  */
 
 package com.yahoo.platform.yui.compressor;
 
-import org.mozilla.javascript.*;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.mozilla.javascript.CompilerEnvirons;
+import org.mozilla.javascript.ErrorReporter;
+import org.mozilla.javascript.EvaluatorException;
+import org.mozilla.javascript.Parser;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Token;
 
 public class JavaScriptCompressor {
 
@@ -256,7 +266,8 @@ public class JavaScriptCompressor {
         return count;
     }
 
-    private static int printSourceString(String source, int offset, StringBuffer sb) {
+    private static int printSourceString(String source, int offset,
+            StringBuffer sb) {
         int length = source.charAt(offset);
         ++offset;
         if ((0x8000 & length) != 0) {
@@ -270,8 +281,8 @@ public class JavaScriptCompressor {
         return offset + length;
     }
 
-    private static int printSourceNumber(String source,
-            int offset, StringBuffer sb) {
+    private static int printSourceNumber(String source, int offset,
+            StringBuffer sb) {
         double number = 0.0;
         char type = source.charAt(offset);
         ++offset;
@@ -280,7 +291,8 @@ public class JavaScriptCompressor {
                 number = source.charAt(offset);
             }
             ++offset;
-        } else if (type == 'J' || type == 'D') {
+        }
+        else if (type == 'J' || type == 'D') {
             if (sb != null) {
                 long lbits;
                 lbits = (long) source.charAt(offset) << 48;
@@ -289,12 +301,14 @@ public class JavaScriptCompressor {
                 lbits |= (long) source.charAt(offset + 3);
                 if (type == 'J') {
                     number = lbits;
-                } else {
+                }
+                else {
                     number = Double.longBitsToDouble(lbits);
                 }
             }
             offset += 4;
-        } else {
+        }
+        else {
             // Bad source
             throw new RuntimeException();
         }
@@ -321,28 +335,28 @@ public class JavaScriptCompressor {
             int tt = source.charAt(offset++);
             switch (tt) {
 
-                case Token.CONDCOMMENT:
-                case Token.KEEPCOMMENT:
-                case Token.NAME:
-                case Token.REGEXP:
-                case Token.STRING:
-                    sb.setLength(0);
-                    offset = printSourceString(source, offset, sb);
-                    tokens.add(new JavaScriptToken(tt, sb.toString()));
-                    break;
+            case Token.CONDCOMMENT:
+            case Token.KEEPCOMMENT:
+            case Token.NAME:
+            case Token.REGEXP:
+            case Token.STRING:
+                sb.setLength(0);
+                offset = printSourceString(source, offset, sb);
+                tokens.add(new JavaScriptToken(tt, sb.toString()));
+                break;
 
-                case Token.NUMBER:
-                    sb.setLength(0);
-                    offset = printSourceNumber(source, offset, sb);
-                    tokens.add(new JavaScriptToken(tt, sb.toString()));
-                    break;
+            case Token.NUMBER:
+                sb.setLength(0);
+                offset = printSourceNumber(source, offset, sb);
+                tokens.add(new JavaScriptToken(tt, sb.toString()));
+                break;
 
-                default:
-                    String literal = (String) literals.get(new Integer(tt));
-                    if (literal != null) {
-                        tokens.add(new JavaScriptToken(tt, literal));
-                    }
-                    break;
+            default:
+                String literal = (String) literals.get(new Integer(tt));
+                if (literal != null) {
+                    tokens.add(new JavaScriptToken(tt, literal));
+                }
+                break;
             }
         }
 
@@ -365,21 +379,25 @@ public class JavaScriptCompressor {
                 token = (JavaScriptToken) tokens.get(i);
                 switch (token.getType()) {
 
-                    case Token.ADD:
-                        if (i > 0 && i < length) {
-                            prevToken = (JavaScriptToken) tokens.get(i - 1);
-                            nextToken = (JavaScriptToken) tokens.get(i + 1);
-                            if (prevToken.getType() == Token.STRING && nextToken.getType() == Token.STRING &&
-                                    (i == length - 1 || ((JavaScriptToken) tokens.get(i + 2)).getType() != Token.DOT)) {
-                                tokens.set(i - 1, new JavaScriptToken(Token.STRING,
-                                        prevToken.getValue() + nextToken.getValue()));
-                                tokens.remove(i + 1);
-                                tokens.remove(i);
-                                i = i - 1;
-                                length = length - 2;
-                                break;
-                            }
+                case Token.ADD:
+                    if (i > 0 && i < length) {
+                        prevToken = (JavaScriptToken) tokens.get(i - 1);
+                        nextToken = (JavaScriptToken) tokens.get(i + 1);
+                        if (prevToken.getType() == Token.STRING &&
+                                nextToken.getType() == Token.STRING &&
+                                (i == length - 1 || ((JavaScriptToken) tokens
+                                        .get(i + 2)).getType() != Token.DOT)) {
+                            tokens.set(i - 1,
+                                       new JavaScriptToken(Token.STRING,
+                                               prevToken.getValue() +
+                                                       nextToken.getValue()));
+                            tokens.remove(i + 1);
+                            tokens.remove(i);
+                            i = i - 1;
+                            length = length - 2;
+                            break;
                         }
+                    }
                 }
             }
 
@@ -401,7 +419,8 @@ public class JavaScriptCompressor {
                 int doubleQuoteCount = countChar(tv, '"');
                 if (doubleQuoteCount <= singleQuoteCount) {
                     quotechar = '"';
-                } else {
+                }
+                else {
                     quotechar = '\'';
                 }
 
@@ -446,12 +465,13 @@ public class JavaScriptCompressor {
     }
 
     /*
-     * Simple check to see whether a string is a valid identifier name.
-     * If a string matches this pattern, it means it IS a valid
-     * identifier name. If a string doesn't match it, it does not
-     * necessarily mean it is not a valid identifier name.
+     * Simple check to see whether a string is a valid identifier name. If a
+     * string matches this pattern, it means it IS a valid identifier name. If a
+     * string doesn't match it, it does not necessarily mean it is not a valid
+     * identifier name.
      */
-    private static final Pattern SIMPLE_IDENTIFIER_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+    private static final Pattern SIMPLE_IDENTIFIER_NAME_PATTERN =
+            Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
     private static boolean isValidIdentifier(String s) {
         Matcher m = SIMPLE_IDENTIFIER_NAME_PATTERN.matcher(s);
@@ -459,8 +479,8 @@ public class JavaScriptCompressor {
     }
 
     /*
-    * Transforms obj["foo"] into obj.foo whenever possible, saving 3 bytes.
-    */
+     * Transforms obj["foo"] into obj.foo whenever possible, saving 3 bytes.
+     */
     private static void optimizeObjectMemberAccess(ArrayList tokens) {
 
         String tv;
@@ -470,7 +490,8 @@ public class JavaScriptCompressor {
         for (i = 0, length = tokens.size(); i < length; i++) {
 
             if (((JavaScriptToken) tokens.get(i)).getType() == Token.LB &&
-                    i > 0 && i < length - 2 &&
+                    i > 0 &&
+                    i < length - 2 &&
                     ((JavaScriptToken) tokens.get(i - 1)).getType() == Token.NAME &&
                     ((JavaScriptToken) tokens.get(i + 1)).getType() == Token.STRING &&
                     ((JavaScriptToken) tokens.get(i + 2)).getType() == Token.RB) {
@@ -499,7 +520,8 @@ public class JavaScriptCompressor {
 
         for (i = 0, length = tokens.size(); i < length; i++) {
             if (((JavaScriptToken) tokens.get(i)).getType() == Token.OBJECTLIT &&
-                    i > 0 && ((JavaScriptToken) tokens.get(i - 1)).getType() == Token.STRING) {
+                    i > 0 &&
+                    ((JavaScriptToken) tokens.get(i - 1)).getType() == Token.STRING) {
                 token = (JavaScriptToken) tokens.get(i - 1);
                 tv = token.getValue();
                 tv = tv.substring(1, tv.length() - 1);
@@ -533,9 +555,9 @@ public class JavaScriptCompressor {
         this.tokens = parse(in, reporter);
     }
 
-    public void compress(Writer out, int linebreak, boolean munge, boolean verbose,
-            boolean preserveAllSemiColons, boolean disableOptimizations)
-            throws IOException {
+    public void compress(Writer out, int linebreak, boolean munge,
+            boolean verbose, boolean preserveAllSemiColons,
+            boolean disableOptimizations) throws IOException {
 
         this.munge = munge;
         this.verbose = verbose;
@@ -576,11 +598,12 @@ public class JavaScriptCompressor {
     }
 
     /*
-     * Returns the identifier for the specified symbol defined in
-     * the specified scope or in any scope above it. Returns null
-     * if this symbol does not have a corresponding identifier.
+     * Returns the identifier for the specified symbol defined in the specified
+     * scope or in any scope above it. Returns null if this symbol does not have
+     * a corresponding identifier.
      */
-    private JavaScriptIdentifier getIdentifier(String symbol, ScriptOrFnScope scope) {
+    private JavaScriptIdentifier getIdentifier(String symbol,
+            ScriptOrFnScope scope) {
         JavaScriptIdentifier identifier;
         while (scope != null) {
             identifier = scope.getIdentifier(symbol);
@@ -593,9 +616,9 @@ public class JavaScriptCompressor {
     }
 
     /*
-     * If either 'eval' or 'with' is used in a local scope, we must make
-     * sure that all containing local scopes don't get munged. Otherwise,
-     * the obfuscation would potentially introduce bugs.
+     * If either 'eval' or 'with' is used in a local scope, we must make sure
+     * that all containing local scopes don't get munged. Otherwise, the
+     * obfuscation would potentially introduce bugs.
      */
     private void protectScopeFromObfuscation(ScriptOrFnScope scope) {
         assert scope != null;
@@ -657,7 +680,9 @@ public class JavaScriptCompressor {
                 // Get the name of the function and declare it in the current scope.
                 symbol = token.getValue();
                 if (currentScope.getIdentifier(symbol) != null) {
-                    warn("The function " + symbol + " has already been declared in the same scope...", true);
+                    warn("The function " + symbol +
+                            " has already been declared in the same scope...",
+                         true);
                 }
                 currentScope.declareIdentifier(symbol);
             }
@@ -668,7 +693,8 @@ public class JavaScriptCompressor {
         if (mode == BUILDING_SYMBOL_TREE) {
             fnScope = new ScriptOrFnScope(braceNesting, currentScope);
             indexedScopes.put(new Integer(offset), fnScope);
-        } else {
+        }
+        else {
             fnScope = (ScriptOrFnScope) indexedScopes.get(new Integer(offset));
         }
 
@@ -722,16 +748,20 @@ public class JavaScriptCompressor {
                 String variableType = hint.substring(idx + 1).trim();
                 if (mode == BUILDING_SYMBOL_TREE) {
                     fnScope.addHint(variableName, variableType);
-                } else if (mode == CHECKING_SYMBOL_TREE) {
+                }
+                else if (mode == CHECKING_SYMBOL_TREE) {
                     identifier = fnScope.getIdentifier(variableName);
                     if (identifier != null) {
                         if (variableType.equals("nomunge")) {
                             identifier.preventMunging();
-                        } else {
+                        }
+                        else {
                             warn("Unsupported hint value: " + hint, true);
                         }
-                    } else {
-                        warn("Hint refers to an unknown identifier: " + hint, true);
+                    }
+                    else {
+                        warn("Hint refers to an unknown identifier: " + hint,
+                             true);
                     }
                 }
             }
@@ -762,7 +792,8 @@ public class JavaScriptCompressor {
             // scope to avoid errors related to the obfuscation process. No need to
             // display a warning if the symbol was already declared here...
             currentScope.declareIdentifier(symbol);
-        } else {
+        }
+        else {
             identifier = getIdentifier(symbol, currentScope);
             identifier.incrementRefcount();
         }
@@ -795,99 +826,106 @@ public class JavaScriptCompressor {
 
             switch (token.getType()) {
 
-                case Token.SEMI:
-                case Token.COMMA:
-                    if (braceNesting == expressionBraceNesting &&
-                            bracketNesting == 0 &&
-                            parensNesting == 0) {
-                        return;
-                    }
-                    break;
+            case Token.SEMI:
+            case Token.COMMA:
+                if (braceNesting == expressionBraceNesting &&
+                        bracketNesting == 0 && parensNesting == 0) {
+                    return;
+                }
+                break;
 
-                case Token.FUNCTION:
-                    parseFunctionDeclaration();
-                    break;
+            case Token.FUNCTION:
+                parseFunctionDeclaration();
+                break;
 
-                case Token.LC:
-                    braceNesting++;
-                    break;
+            case Token.LC:
+                braceNesting++;
+                break;
 
-                case Token.RC:
-                    braceNesting--;
-                    assert braceNesting >= expressionBraceNesting;
-                    break;
+            case Token.RC:
+                braceNesting--;
+                assert braceNesting >= expressionBraceNesting;
+                break;
 
-                case Token.LB:
-                    bracketNesting++;
-                    break;
+            case Token.LB:
+                bracketNesting++;
+                break;
 
-                case Token.RB:
-                    bracketNesting--;
-                    break;
+            case Token.RB:
+                bracketNesting--;
+                break;
 
-                case Token.LP:
-                    parensNesting++;
-                    break;
+            case Token.LP:
+                parensNesting++;
+                break;
 
-                case Token.RP:
-                    parensNesting--;
-                    break;
+            case Token.RP:
+                parensNesting--;
+                break;
 
-                case Token.CONDCOMMENT:
-                    if (mode == BUILDING_SYMBOL_TREE) {
+            case Token.CONDCOMMENT:
+                if (mode == BUILDING_SYMBOL_TREE) {
+                    protectScopeFromObfuscation(currentScope);
+                    warn(
+                         "Using JScript conditional comments is not recommended." +
+                                 (munge ? " Moreover, using JScript conditional comments reduces the level of compression!"
+                                         : ""), true);
+                }
+                break;
+
+            case Token.NAME:
+                symbol = token.getValue();
+
+                if (mode == BUILDING_SYMBOL_TREE) {
+
+                    if (symbol.equals("eval")) {
+
                         protectScopeFromObfuscation(currentScope);
-                        warn("Using JScript conditional comments is not recommended." + (munge ? " Moreover, using JScript conditional comments reduces the level of compression!" : ""), true);
+                        warn(
+                             "Using 'eval' is not recommended." +
+                                     (munge ? " Moreover, using 'eval' reduces the level of compression!"
+                                             : ""), true);
+
                     }
-                    break;
 
-                case Token.NAME:
-                    symbol = token.getValue();
+                }
+                else if (mode == CHECKING_SYMBOL_TREE) {
 
-                    if (mode == BUILDING_SYMBOL_TREE) {
+                    if ((offset < 2 || (getToken(-2).getType() != Token.DOT &&
+                            getToken(-2).getType() != Token.GET && getToken(-2)
+                            .getType() != Token.SET)) &&
+                            getToken(0).getType() != Token.OBJECTLIT) {
 
-                        if (symbol.equals("eval")) {
+                        identifier = getIdentifier(symbol, currentScope);
 
-                            protectScopeFromObfuscation(currentScope);
-                            warn("Using 'eval' is not recommended." + (munge ? " Moreover, using 'eval' reduces the level of compression!" : ""), true);
+                        if (identifier == null) {
 
-                        }
+                            if (symbol.length() <= 3 &&
+                                    !builtin.contains(symbol)) {
+                                // Here, we found an undeclared and un-namespaced symbol that is
+                                // 3 characters or less in length. Declare it in the global scope.
+                                // We don't need to declare longer symbols since they won't cause
+                                // any conflict with other munged symbols.
+                                globalScope.declareIdentifier(symbol);
 
-                    } else if (mode == CHECKING_SYMBOL_TREE) {
-
-                        if ((offset < 2 ||
-                                (getToken(-2).getType() != Token.DOT &&
-                                        getToken(-2).getType() != Token.GET &&
-                                        getToken(-2).getType() != Token.SET)) &&
-                                getToken(0).getType() != Token.OBJECTLIT) {
-
-                            identifier = getIdentifier(symbol, currentScope);
-
-                            if (identifier == null) {
-
-                                if (symbol.length() <= 3 && !builtin.contains(symbol)) {
-                                    // Here, we found an undeclared and un-namespaced symbol that is
-                                    // 3 characters or less in length. Declare it in the global scope.
-                                    // We don't need to declare longer symbols since they won't cause
-                                    // any conflict with other munged symbols.
-                                    globalScope.declareIdentifier(symbol);
-
-                                    // I removed the warning since was only being done when
-                                    // for identifiers 3 chars or less, and was just causing
-                                    // noise for people who happen to rely on an externally
-                                    // declared variable that happen to be that short.  We either
-                                    // should always warn or never warn -- the fact that we
-                                    // declare the short symbols in the global space doesn't
-                                    // change anything.
-                                    // warn("Found an undeclared symbol: " + symbol, true);
-                                }
-
-                            } else {
-
-                                identifier.incrementRefcount();
+                                // I removed the warning since was only being done when
+                                // for identifiers 3 chars or less, and was just causing
+                                // noise for people who happen to rely on an externally
+                                // declared variable that happen to be that short.  We either
+                                // should always warn or never warn -- the fact that we
+                                // declare the short symbols in the global space doesn't
+                                // change anything.
+                                // warn("Found an undeclared symbol: " + symbol, true);
                             }
+
+                        }
+                        else {
+
+                            identifier.incrementRefcount();
                         }
                     }
-                    break;
+                }
+                break;
             }
         }
     }
@@ -908,128 +946,146 @@ public class JavaScriptCompressor {
 
             switch (token.getType()) {
 
-                case Token.VAR:
+            case Token.VAR:
 
-                    if (mode == BUILDING_SYMBOL_TREE && scope.incrementVarCount() > 1) {
-                        warn("Try to use a single 'var' statement per scope.", true);
+                if (mode == BUILDING_SYMBOL_TREE &&
+                        scope.incrementVarCount() > 1) {
+                    warn("Try to use a single 'var' statement per scope.", true);
+                }
+
+                /* FALLSTHROUGH */
+
+            case Token.CONST:
+
+                // The var keyword is followed by at least one symbol name.
+                // If several symbols follow, they are comma separated.
+                for (;;) {
+                    token = consumeToken();
+
+                    assert token.getType() == Token.NAME;
+
+                    if (mode == BUILDING_SYMBOL_TREE) {
+                        symbol = token.getValue();
+                        if (scope.getIdentifier(symbol) == null) {
+                            scope.declareIdentifier(symbol);
+                        }
+                        else {
+                            warn(
+                                 "The variable " + symbol +
+                                         " has already been declared in the same scope...",
+                                 true);
+                        }
                     }
 
-                    /* FALLSTHROUGH */
+                    token = getToken(0);
 
-                case Token.CONST:
+                    assert token.getType() == Token.SEMI ||
+                            token.getType() == Token.ASSIGN ||
+                            token.getType() == Token.COMMA ||
+                            token.getType() == Token.IN;
 
-                    // The var keyword is followed by at least one symbol name.
-                    // If several symbols follow, they are comma separated.
-                    for (; ;) {
-                        token = consumeToken();
-
-                        assert token.getType() == Token.NAME;
-
-                        if (mode == BUILDING_SYMBOL_TREE) {
-                            symbol = token.getValue();
-                            if (scope.getIdentifier(symbol) == null) {
-                                scope.declareIdentifier(symbol);
-                            } else {
-                                warn("The variable " + symbol + " has already been declared in the same scope...", true);
-                            }
-                        }
-
-                        token = getToken(0);
-
-                        assert token.getType() == Token.SEMI ||
-                                token.getType() == Token.ASSIGN ||
-                                token.getType() == Token.COMMA ||
-                                token.getType() == Token.IN;
-
-                        if (token.getType() == Token.IN) {
+                    if (token.getType() == Token.IN) {
+                        break;
+                    }
+                    else {
+                        parseExpression();
+                        token = getToken(-1);
+                        if (token.getType() == Token.SEMI) {
                             break;
-                        } else {
-                            parseExpression();
-                            token = getToken(-1);
-                            if (token.getType() == Token.SEMI) {
-                                break;
-                            }
                         }
                     }
-                    break;
+                }
+                break;
 
-                case Token.FUNCTION:
-                    parseFunctionDeclaration();
-                    break;
+            case Token.FUNCTION:
+                parseFunctionDeclaration();
+                break;
 
-                case Token.LC:
-                    braceNesting++;
-                    break;
+            case Token.LC:
+                braceNesting++;
+                break;
 
-                case Token.RC:
-                    braceNesting--;
-                    assert braceNesting >= scope.getBraceNesting();
-                    if (braceNesting == scope.getBraceNesting()) {
-                        leaveCurrentScope();
-                        return;
-                    }
-                    break;
+            case Token.RC:
+                braceNesting--;
+                assert braceNesting >= scope.getBraceNesting();
+                if (braceNesting == scope.getBraceNesting()) {
+                    leaveCurrentScope();
+                    return;
+                }
+                break;
 
-                case Token.WITH:
-                    if (mode == BUILDING_SYMBOL_TREE) {
-                        // Inside a 'with' block, it is impossible to figure out
-                        // statically whether a symbol is a local variable or an
-                        // object member. As a consequence, the only thing we can
-                        // do is turn the obfuscation off for the highest scope
-                        // containing the 'with' block.
+            case Token.WITH:
+                if (mode == BUILDING_SYMBOL_TREE) {
+                    // Inside a 'with' block, it is impossible to figure out
+                    // statically whether a symbol is a local variable or an
+                    // object member. As a consequence, the only thing we can
+                    // do is turn the obfuscation off for the highest scope
+                    // containing the 'with' block.
+                    protectScopeFromObfuscation(scope);
+                    warn(
+                         "Using 'with' is not recommended." +
+                                 (munge ? " Moreover, using 'with' reduces the level of compression!"
+                                         : ""), true);
+                }
+                break;
+
+            case Token.CATCH:
+                parseCatch();
+                break;
+
+            case Token.CONDCOMMENT:
+                if (mode == BUILDING_SYMBOL_TREE) {
+                    protectScopeFromObfuscation(scope);
+                    warn(
+                         "Using JScript conditional comments is not recommended." +
+                                 (munge ? " Moreover, using JScript conditional comments reduces the level of compression."
+                                         : ""), true);
+                }
+                break;
+
+            case Token.NAME:
+                symbol = token.getValue();
+
+                if (mode == BUILDING_SYMBOL_TREE) {
+
+                    if (symbol.equals("eval")) {
+
                         protectScopeFromObfuscation(scope);
-                        warn("Using 'with' is not recommended." + (munge ? " Moreover, using 'with' reduces the level of compression!" : ""), true);
+                        warn(
+                             "Using 'eval' is not recommended." +
+                                     (munge ? " Moreover, using 'eval' reduces the level of compression!"
+                                             : ""), true);
+
                     }
-                    break;
 
-                case Token.CATCH:
-                    parseCatch();
-                    break;
+                }
+                else if (mode == CHECKING_SYMBOL_TREE) {
 
-                case Token.CONDCOMMENT:
-                    if (mode == BUILDING_SYMBOL_TREE) {
-                        protectScopeFromObfuscation(scope);
-                        warn("Using JScript conditional comments is not recommended." + (munge ? " Moreover, using JScript conditional comments reduces the level of compression." : ""), true);
-                    }
-                    break;
+                    if ((offset < 2 || getToken(-2).getType() != Token.DOT) &&
+                            getToken(0).getType() != Token.OBJECTLIT) {
 
-                case Token.NAME:
-                    symbol = token.getValue();
+                        identifier = getIdentifier(symbol, scope);
 
-                    if (mode == BUILDING_SYMBOL_TREE) {
+                        if (identifier == null) {
 
-                        if (symbol.equals("eval")) {
-
-                            protectScopeFromObfuscation(scope);
-                            warn("Using 'eval' is not recommended." + (munge ? " Moreover, using 'eval' reduces the level of compression!" : ""), true);
-
-                        }
-
-                    } else if (mode == CHECKING_SYMBOL_TREE) {
-
-                        if ((offset < 2 || getToken(-2).getType() != Token.DOT) &&
-                                getToken(0).getType() != Token.OBJECTLIT) {
-
-                            identifier = getIdentifier(symbol, scope);
-
-                            if (identifier == null) {
-
-                                if (symbol.length() <= 3 && !builtin.contains(symbol)) {
-                                    // Here, we found an undeclared and un-namespaced symbol that is
-                                    // 3 characters or less in length. Declare it in the global scope.
-                                    // We don't need to declare longer symbols since they won't cause
-                                    // any conflict with other munged symbols.
-                                    globalScope.declareIdentifier(symbol);
-                                    // warn("Found an undeclared symbol: " + symbol, true);
-                                }
-
-                            } else {
-
-                                identifier.incrementRefcount();
+                            if (symbol.length() <= 3 &&
+                                    !builtin.contains(symbol)) {
+                                // Here, we found an undeclared and un-namespaced symbol that is
+                                // 3 characters or less in length. Declare it in the global scope.
+                                // We don't need to declare longer symbols since they won't cause
+                                // any conflict with other munged symbols.
+                                globalScope.declareIdentifier(symbol);
+                                // warn("Found an undeclared symbol: " + symbol, true);
                             }
+
+                        }
+                        else {
+
+                            identifier.incrementRefcount();
                         }
                     }
-                    break;
+                }
+                break;
             }
         }
     }
@@ -1079,8 +1135,8 @@ public class JavaScriptCompressor {
         globalScope.munge();
     }
 
-    private StringBuffer printSymbolTree(int linebreakpos, boolean preserveAllSemiColons)
-            throws IOException {
+    private StringBuffer printSymbolTree(int linebreakpos,
+            boolean preserveAllSemiColons) throws IOException {
 
         offset = 0;
         braceNesting = 0;
@@ -1106,194 +1162,222 @@ public class JavaScriptCompressor {
 
             switch (token.getType()) {
 
-                case Token.NAME:
+            case Token.NAME:
 
-                    if (offset >= 2 && getToken(-2).getType() == Token.DOT ||
-                            getToken(0).getType() == Token.OBJECTLIT) {
+                if (offset >= 2 && getToken(-2).getType() == Token.DOT ||
+                        getToken(0).getType() == Token.OBJECTLIT) {
 
-                        result.append(symbol);
+                    result.append(symbol);
 
-                    } else {
+                }
+                else {
 
-                        identifier = getIdentifier(symbol, currentScope);
-                        if (identifier != null) {
-                            if (identifier.getMungedValue() != null) {
-                                result.append(identifier.getMungedValue());
-                            } else {
-                                result.append(symbol);
-                            }
-                            if (currentScope != globalScope && identifier.getRefcount() == 0) {
-                                warn("The symbol " + symbol + " is declared but is apparently never used.\nThis code can probably be written in a more compact way.", true);
-                            }
-                        } else {
+                    identifier = getIdentifier(symbol, currentScope);
+                    if (identifier != null) {
+                        if (identifier.getMungedValue() != null) {
+                            result.append(identifier.getMungedValue());
+                        }
+                        else {
                             result.append(symbol);
                         }
-                    }
-                    break;
-
-                case Token.REGEXP:
-                case Token.NUMBER:
-                case Token.STRING:
-                    result.append(symbol);
-                    break;
-
-                case Token.ADD:
-                case Token.SUB:
-                    result.append((String) literals.get(new Integer(token.getType())));
-                    if (offset < length) {
-                        token = getToken(0);
-                        if (token.getType() == Token.INC ||
-                                token.getType() == Token.DEC ||
-                                token.getType() == Token.ADD ||
-                                token.getType() == Token.DEC) {
-                            // Handle the case x +/- ++/-- y
-                            // We must keep a white space here. Otherwise, x +++ y would be
-                            // interpreted as x ++ + y by the compiler, which is a bug (due
-                            // to the implicit assignment being done on the wrong variable)
-                            result.append(' ');
-                        } else if (token.getType() == Token.POS && getToken(-1).getType() == Token.ADD ||
-                                token.getType() == Token.NEG && getToken(-1).getType() == Token.SUB) {
-                            // Handle the case x + + y and x - - y
-                            result.append(' ');
+                        if (currentScope != globalScope &&
+                                identifier.getRefcount() == 0) {
+                            warn(
+                                 "The symbol " +
+                                         symbol +
+                                         " is declared but is apparently never used.\nThis code can probably be written in a more compact way.",
+                                 true);
                         }
                     }
-                    break;
+                    else {
+                        result.append(symbol);
+                    }
+                }
+                break;
 
-                case Token.FUNCTION:
-                    result.append("function");
-                    token = consumeToken();
-                    if (token.getType() == Token.NAME) {
+            case Token.REGEXP:
+            case Token.NUMBER:
+            case Token.STRING:
+                result.append(symbol);
+                break;
+
+            case Token.ADD:
+            case Token.SUB:
+                result.append((String) literals
+                        .get(new Integer(token.getType())));
+                if (offset < length) {
+                    token = getToken(0);
+                    if (token.getType() == Token.INC ||
+                            token.getType() == Token.DEC ||
+                            token.getType() == Token.ADD ||
+                            token.getType() == Token.DEC) {
+                        // Handle the case x +/- ++/-- y
+                        // We must keep a white space here. Otherwise, x +++ y would be
+                        // interpreted as x ++ + y by the compiler, which is a bug (due
+                        // to the implicit assignment being done on the wrong variable)
                         result.append(' ');
+                    }
+                    else if (token.getType() == Token.POS &&
+                            getToken(-1).getType() == Token.ADD ||
+                            token.getType() == Token.NEG &&
+                            getToken(-1).getType() == Token.SUB) {
+                        // Handle the case x + + y and x - - y
+                        result.append(' ');
+                    }
+                }
+                break;
+
+            case Token.FUNCTION:
+                result.append("function");
+                token = consumeToken();
+                if (token.getType() == Token.NAME) {
+                    result.append(' ');
+                    symbol = token.getValue();
+                    identifier = getIdentifier(symbol, currentScope);
+                    assert identifier != null;
+                    if (identifier.getMungedValue() != null) {
+                        result.append(identifier.getMungedValue());
+                    }
+                    else {
+                        result.append(symbol);
+                    }
+                    if (currentScope != globalScope &&
+                            identifier.getRefcount() == 0) {
+                        warn(
+                             "The symbol " +
+                                     symbol +
+                                     " is declared but is apparently never used.\nThis code can probably be written in a more compact way.",
+                             true);
+                    }
+                    token = consumeToken();
+                }
+                assert token.getType() == Token.LP;
+                result.append('(');
+                currentScope =
+                        (ScriptOrFnScope) indexedScopes
+                                .get(new Integer(offset));
+                enterScope(currentScope);
+                while ((token = consumeToken()).getType() != Token.RP) {
+                    assert token.getType() == Token.NAME ||
+                            token.getType() == Token.COMMA;
+                    if (token.getType() == Token.NAME) {
                         symbol = token.getValue();
                         identifier = getIdentifier(symbol, currentScope);
                         assert identifier != null;
                         if (identifier.getMungedValue() != null) {
                             result.append(identifier.getMungedValue());
-                        } else {
+                        }
+                        else {
                             result.append(symbol);
                         }
-                        if (currentScope != globalScope && identifier.getRefcount() == 0) {
-                            warn("The symbol " + symbol + " is declared but is apparently never used.\nThis code can probably be written in a more compact way.", true);
-                        }
-                        token = consumeToken();
                     }
-                    assert token.getType() == Token.LP;
-                    result.append('(');
-                    currentScope = (ScriptOrFnScope) indexedScopes.get(new Integer(offset));
-                    enterScope(currentScope);
-                    while ((token = consumeToken()).getType() != Token.RP) {
-                        assert token.getType() == Token.NAME || token.getType() == Token.COMMA;
-                        if (token.getType() == Token.NAME) {
-                            symbol = token.getValue();
-                            identifier = getIdentifier(symbol, currentScope);
-                            assert identifier != null;
-                            if (identifier.getMungedValue() != null) {
-                                result.append(identifier.getMungedValue());
-                            } else {
-                                result.append(symbol);
-                            }
-                        } else if (token.getType() == Token.COMMA) {
-                            result.append(',');
-                        }
+                    else if (token.getType() == Token.COMMA) {
+                        result.append(',');
                     }
-                    result.append(')');
-                    token = consumeToken();
-                    assert token.getType() == Token.LC;
-                    result.append('{');
-                    braceNesting++;
+                }
+                result.append(')');
+                token = consumeToken();
+                assert token.getType() == Token.LC;
+                result.append('{');
+                braceNesting++;
+                token = getToken(0);
+                if (token.getType() == Token.STRING &&
+                        getToken(1).getType() == Token.SEMI) {
+                    // This is a hint. Skip it!
+                    consumeToken();
+                    consumeToken();
+                }
+                break;
+
+            case Token.RETURN:
+            case Token.TYPEOF:
+                result.append(literals.get(new Integer(token.getType())));
+                // No space needed after 'return' and 'typeof' when followed
+                // by '(', '[', '{', a string or a regexp.
+                if (offset < length) {
                     token = getToken(0);
-                    if (token.getType() == Token.STRING &&
-                            getToken(1).getType() == Token.SEMI) {
-                        // This is a hint. Skip it!
-                        consumeToken();
-                        consumeToken();
-                    }
-                    break;
-
-                case Token.RETURN:
-                case Token.TYPEOF:
-                    result.append(literals.get(new Integer(token.getType())));
-                    // No space needed after 'return' and 'typeof' when followed
-                    // by '(', '[', '{', a string or a regexp.
-                    if (offset < length) {
-                        token = getToken(0);
-                        if (token.getType() != Token.LP &&
-                                token.getType() != Token.LB &&
-                                token.getType() != Token.LC &&
-                                token.getType() != Token.STRING &&
-                                token.getType() != Token.REGEXP &&
-                                token.getType() != Token.SEMI) {
-                            result.append(' ');
-                        }
-                    }
-                    break;
-
-                case Token.CASE:
-                case Token.THROW:
-                    result.append(literals.get(new Integer(token.getType())));
-                    // White-space needed after 'case' and 'throw' when not followed by a string.
-                    if (offset < length && getToken(0).getType() != Token.STRING) {
+                    if (token.getType() != Token.LP &&
+                            token.getType() != Token.LB &&
+                            token.getType() != Token.LC &&
+                            token.getType() != Token.STRING &&
+                            token.getType() != Token.REGEXP &&
+                            token.getType() != Token.SEMI) {
                         result.append(' ');
                     }
-                    break;
+                }
+                break;
 
-                case Token.BREAK:
-                case Token.CONTINUE:
-                    result.append(literals.get(new Integer(token.getType())));
-                    if (offset < length && getToken(0).getType() != Token.SEMI) {
-                        // If 'break' or 'continue' is not followed by a semi-colon, it must
-                        // be followed by a label, hence the need for a white space.
-                        result.append(' ');
-                    }
-                    break;
+            case Token.CASE:
+            case Token.THROW:
+                result.append(literals.get(new Integer(token.getType())));
+                // White-space needed after 'case' and 'throw' when not followed by a string.
+                if (offset < length && getToken(0).getType() != Token.STRING) {
+                    result.append(' ');
+                }
+                break;
 
-                case Token.LC:
-                    result.append('{');
-                    braceNesting++;
-                    break;
+            case Token.BREAK:
+            case Token.CONTINUE:
+                result.append(literals.get(new Integer(token.getType())));
+                if (offset < length && getToken(0).getType() != Token.SEMI) {
+                    // If 'break' or 'continue' is not followed by a semi-colon, it must
+                    // be followed by a label, hence the need for a white space.
+                    result.append(' ');
+                }
+                break;
 
-                case Token.RC:
-                    result.append('}');
-                    braceNesting--;
-                    assert braceNesting >= currentScope.getBraceNesting();
-                    if (braceNesting == currentScope.getBraceNesting()) {
-                        leaveCurrentScope();
-                    }
-                    break;
+            case Token.LC:
+                result.append('{');
+                braceNesting++;
+                break;
 
-                case Token.SEMI:
-                    // No need to output a semi-colon if the next character is a right-curly...
-                    if (preserveAllSemiColons || offset < length && getToken(0).getType() != Token.RC) {
-                        result.append(';');
-                    }
+            case Token.RC:
+                result.append('}');
+                braceNesting--;
+                assert braceNesting >= currentScope.getBraceNesting();
+                if (braceNesting == currentScope.getBraceNesting()) {
+                    leaveCurrentScope();
+                }
+                break;
 
-                    if (linebreakpos >= 0 && result.length() - linestartpos > linebreakpos) {
-                        // Some source control tools don't like it when files containing lines longer
-                        // than, say 8000 characters, are checked in. The linebreak option is used in
-                        // that case to split long lines after a specific column.
-                        result.append('\n');
-                        linestartpos = result.length();
-                    }
-                    break;
+            case Token.SEMI:
+                // No need to output a semi-colon if the next character is a right-curly...
+                if (preserveAllSemiColons || offset < length &&
+                        getToken(0).getType() != Token.RC) {
+                    result.append(';');
+                }
 
-                case Token.CONDCOMMENT:
-                case Token.KEEPCOMMENT:
-                    if (result.length() > 0 && result.charAt(result.length() - 1) != '\n') {
-                        result.append("\n");
-                    }
-                    result.append("/*");
-                    result.append(symbol);
-                    result.append("*/\n");
-                    break;
+                if (linebreakpos >= 0 &&
+                        result.length() - linestartpos > linebreakpos) {
+                    // Some source control tools don't like it when files containing lines longer
+                    // than, say 8000 characters, are checked in. The linebreak option is used in
+                    // that case to split long lines after a specific column.
+                    result.append('\n');
+                    linestartpos = result.length();
+                }
+                break;
 
-                default:
-                    String literal = (String) literals.get(new Integer(token.getType()));
-                    if (literal != null) {
-                        result.append(literal);
-                    } else {
-                        warn("This symbol cannot be printed: " + symbol, true);
-                    }
-                    break;
+            case Token.CONDCOMMENT:
+            case Token.KEEPCOMMENT:
+                if (result.length() > 0 &&
+                        result.charAt(result.length() - 1) != '\n') {
+                    result.append("\n");
+                }
+                result.append("/*");
+                result.append(symbol);
+                result.append("*/\n");
+                break;
+
+            default:
+                String literal =
+                        (String) literals.get(new Integer(token.getType()));
+                if (literal != null) {
+                    result.append(literal);
+                }
+                else {
+                    warn("This symbol cannot be printed: " + symbol, true);
+                }
+                break;
             }
         }
 
@@ -1301,13 +1385,13 @@ public class JavaScriptCompressor {
         // supposed to be removed. This is especially useful when concatenating
         // several minified files (the absence of an ending semi-colon at the
         // end of one file may very likely cause a syntax error)
-        if (!preserveAllSemiColons &&
-                result.length() > 0 &&
+        if (!preserveAllSemiColons && result.length() > 0 &&
                 getToken(-1).getType() != Token.CONDCOMMENT &&
                 getToken(-1).getType() != Token.KEEPCOMMENT) {
             if (result.charAt(result.length() - 1) == '\n') {
                 result.setCharAt(result.length() - 1, ';');
-            } else {
+            }
+            else {
                 result.append(';');
             }
         }

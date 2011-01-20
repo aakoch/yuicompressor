@@ -1,9 +1,8 @@
 /*
- * YUI Compressor
- * Author: Julien Lecomte - http://www.julienlecomte.net/
- * Copyright (c) 2009 Yahoo! Inc.  All rights reserved.
- * The copyrights embodied in the content of this file are licensed
- * by Yahoo! Inc. under the BSD (revised) open source license.
+ * YUI Compressor Author: Julien Lecomte - http://www.julienlecomte.net/
+ * Copyright (c) 2009 Yahoo! Inc. All rights reserved. The copyrights embodied
+ * in the content of this file are licensed by Yahoo! Inc. under the BSD
+ * (revised) open source license.
  */
 
 package com.yahoo.platform.yui.compressor;
@@ -28,14 +27,19 @@ public class YUICompressor {
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option typeOpt = parser.addStringOption("type");
-        CmdLineParser.Option verboseOpt = parser.addBooleanOption('v', "verbose");
+        CmdLineParser.Option verboseOpt =
+                parser.addBooleanOption('v', "verbose");
         CmdLineParser.Option nomungeOpt = parser.addBooleanOption("nomunge");
-        CmdLineParser.Option linebreakOpt = parser.addStringOption("line-break");
-        CmdLineParser.Option preserveSemiOpt = parser.addBooleanOption("preserve-semi");
-        CmdLineParser.Option disableOptimizationsOpt = parser.addBooleanOption("disable-optimizations");
+        CmdLineParser.Option linebreakOpt =
+                parser.addStringOption("line-break");
+        CmdLineParser.Option preserveSemiOpt =
+                parser.addBooleanOption("preserve-semi");
+        CmdLineParser.Option disableOptimizationsOpt =
+                parser.addBooleanOption("disable-optimizations");
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
         CmdLineParser.Option charsetOpt = parser.addStringOption("charset");
-        CmdLineParser.Option outputFilenameOpt = parser.addStringOption('o', "output");
+        CmdLineParser.Option outputFilenameOpt =
+                parser.addStringOption('o', "output");
 
         Reader in = null;
         Writer out = null;
@@ -62,7 +66,6 @@ public class YUICompressor {
                 // UTF-8 seems to be a better choice than what the system is reporting
                 charset = "UTF-8";
 
-
                 if (verbose) {
                     System.err.println("\n[INFO] Using charset " + charset);
                 }
@@ -73,14 +76,16 @@ public class YUICompressor {
             if (linebreakstr != null) {
                 try {
                     linebreakpos = Integer.parseInt(linebreakstr, 10);
-                } catch (NumberFormatException e) {
+                }
+                catch (NumberFormatException e) {
                     usage();
                     System.exit(1);
                 }
             }
 
             String type = (String) parser.getOptionValue(typeOpt);
-            if (type != null && !type.equalsIgnoreCase("js") && !type.equalsIgnoreCase("css")) {
+            if (type != null && !type.equalsIgnoreCase("js") &&
+                    !type.equalsIgnoreCase("css")) {
                 usage();
                 System.exit(1);
             }
@@ -93,18 +98,20 @@ public class YUICompressor {
             }
 
             String output = (String) parser.getOptionValue(outputFilenameOpt);
-            String pattern[] = output != null ? output.split(":") : new String[0];
+            String pattern[] =
+                    output != null ? output.split(":") : new String[0];
 
             java.util.Iterator filenames = files.iterator();
-            while(filenames.hasNext()) {
-                String inputFilename = (String)filenames.next();
+            while (filenames.hasNext()) {
+                String inputFilename = (String) filenames.next();
 
                 try {
                     if (inputFilename.equals("-")) {
 
                         in = new InputStreamReader(System.in, charset);
 
-                    } else {
+                    }
+                    else {
 
                         if (type == null) {
                             int idx = inputFilename.lastIndexOf('.');
@@ -113,10 +120,13 @@ public class YUICompressor {
                             }
                         }
 
-                        in = new InputStreamReader(new FileInputStream(inputFilename), charset);
+                        in =
+                                new InputStreamReader(new FileInputStream(
+                                        inputFilename), charset);
                     }
 
-                    if (type == null || !type.equalsIgnoreCase("js") && !type.equalsIgnoreCase("css")) {
+                    if (type == null || !type.equalsIgnoreCase("js") &&
+                            !type.equalsIgnoreCase("css")) {
                         usage();
                         System.exit(1);
                     }
@@ -124,58 +134,109 @@ public class YUICompressor {
                     String outputFilename = output;
                     // if a substitution pattern was passed in
                     if (pattern.length > 1 && files.size() > 1) {
-                        outputFilename = inputFilename.replaceFirst(pattern[0], pattern[1]);
+                        outputFilename =
+                                inputFilename.replaceFirst(pattern[0],
+                                                           pattern[1]);
                     }
 
                     if (type.equalsIgnoreCase("js")) {
 
                         try {
 
-                            JavaScriptCompressor compressor = new JavaScriptCompressor(in, new ErrorReporter() {
+                            JavaScriptCompressor compressor =
+                                    new JavaScriptCompressor(in,
+                                            new ErrorReporter() {
 
-                                public void warning(String message, String sourceName,
-                                        int line, String lineSource, int lineOffset) {
-                                    if (line < 0) {
-                                        System.err.println("\n[WARNING] " + message);
-                                    } else {
-                                        System.err.println("\n[WARNING] " + line + ':' + lineOffset + ':' + message);
-                                    }
-                                }
+                                                public void warning(
+                                                        String message,
+                                                        String sourceName,
+                                                        int line,
+                                                        String lineSource,
+                                                        int lineOffset) {
+                                                    if (line < 0) {
+                                                        System.err
+                                                                .println("\n[WARNING] " +
+                                                                        message);
+                                                    }
+                                                    else {
+                                                        System.err
+                                                                .println("\n[WARNING] " +
+                                                                        line +
+                                                                        ':' +
+                                                                        lineOffset +
+                                                                        ':' +
+                                                                        message);
+                                                    }
+                                                }
 
-                                public void error(String message, String sourceName,
-                                        int line, String lineSource, int lineOffset) {
-                                    if (line < 0) {
-                                        System.err.println("\n[ERROR] " + message);
-                                    } else {
-                                        System.err.println("\n[ERROR] " + line + ':' + lineOffset + ':' + message);
-                                    }
-                                }
+                                                public void error(
+                                                        String message,
+                                                        String sourceName,
+                                                        int line,
+                                                        String lineSource,
+                                                        int lineOffset) {
+                                                    if (line < 0) {
+                                                        System.err
+                                                                .println("\n[ERROR] " +
+                                                                        message);
+                                                    }
+                                                    else {
+                                                        System.err
+                                                                .println("\n[ERROR] " +
+                                                                        line +
+                                                                        ':' +
+                                                                        lineOffset +
+                                                                        ':' +
+                                                                        message);
+                                                    }
+                                                }
 
-                                public EvaluatorException runtimeError(String message, String sourceName,
-                                        int line, String lineSource, int lineOffset) {
-                                    error(message, sourceName, line, lineSource, lineOffset);
-                                    return new EvaluatorException(message);
-                                }
-                            });
+                                                public EvaluatorException runtimeError(
+                                                        String message,
+                                                        String sourceName,
+                                                        int line,
+                                                        String lineSource,
+                                                        int lineOffset) {
+                                                    error(message, sourceName,
+                                                          line, lineSource,
+                                                          lineOffset);
+                                                    return new EvaluatorException(
+                                                            message);
+                                                }
+                                            });
 
                             // Close the input stream first, and then open the output stream,
                             // in case the output file should override the input file.
-                            in.close(); in = null;
+                            in.close();
+                            in = null;
 
                             if (outputFilename == null) {
-                                out = new OutputStreamWriter(System.out, charset);
-                            } else {
-                                out = new OutputStreamWriter(new FileOutputStream(outputFilename), charset);
+                                out =
+                                        new OutputStreamWriter(System.out,
+                                                charset);
+                            }
+                            else {
+                                out =
+                                        new OutputStreamWriter(
+                                                new FileOutputStream(
+                                                        outputFilename),
+                                                charset);
                             }
 
-                            boolean munge = parser.getOptionValue(nomungeOpt) == null;
-                            boolean preserveAllSemiColons = parser.getOptionValue(preserveSemiOpt) != null;
-                            boolean disableOptimizations = parser.getOptionValue(disableOptimizationsOpt) != null;
+                            boolean munge =
+                                    parser.getOptionValue(nomungeOpt) == null;
+                            boolean preserveAllSemiColons =
+                                    parser.getOptionValue(preserveSemiOpt) != null;
+                            boolean disableOptimizations =
+                                    parser
+                                            .getOptionValue(disableOptimizationsOpt) != null;
 
-                            compressor.compress(out, linebreakpos, munge, verbose,
-                                    preserveAllSemiColons, disableOptimizations);
+                            compressor.compress(out, linebreakpos, munge,
+                                                verbose, preserveAllSemiColons,
+                                                disableOptimizations);
 
-                        } catch (EvaluatorException e) {
+                        }
+                        catch (EvaluatorException e) {
 
                             e.printStackTrace();
                             // Return a special error code used specifically by the web front-end.
@@ -183,34 +244,43 @@ public class YUICompressor {
 
                         }
 
-                    } else if (type.equalsIgnoreCase("css")) {
+                    }
+                    else if (type.equalsIgnoreCase("css")) {
 
                         CssCompressor compressor = new CssCompressor(in);
 
                         // Close the input stream first, and then open the output stream,
                         // in case the output file should override the input file.
-                        in.close(); in = null;
+                        in.close();
+                        in = null;
 
                         if (outputFilename == null) {
                             out = new OutputStreamWriter(System.out, charset);
-                        } else {
-                            out = new OutputStreamWriter(new FileOutputStream(outputFilename), charset);
+                        }
+                        else {
+                            out =
+                                    new OutputStreamWriter(
+                                            new FileOutputStream(outputFilename),
+                                            charset);
                         }
 
                         compressor.compress(out, linebreakpos);
                     }
 
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
 
                     e.printStackTrace();
                     System.exit(1);
 
-                } finally {
+                }
+                finally {
 
                     if (in != null) {
                         try {
                             in.close();
-                        } catch (IOException e) {
+                        }
+                        catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
@@ -218,13 +288,15 @@ public class YUICompressor {
                     if (out != null) {
                         try {
                             out.close();
-                        } catch (IOException e) {
+                        }
+                        catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                 }
             }
-        } catch (CmdLineParser.OptionException e) {
+        }
+        catch (CmdLineParser.OptionException e) {
 
             usage();
             System.exit(1);
@@ -232,8 +304,8 @@ public class YUICompressor {
     }
 
     private static void usage() {
-        System.err.println(
-                "\nUsage: java -jar yuicompressor-x.y.z.jar [options] [input file]\n\n"
+        System.err
+                .println("\nUsage: java -jar yuicompressor-x.y.z.jar [options] [input file]\n\n"
 
                         + "Global Options\n"
                         + "  -h, --help                Displays this information\n"

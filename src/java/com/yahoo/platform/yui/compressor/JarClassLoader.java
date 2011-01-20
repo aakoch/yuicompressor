@@ -1,9 +1,8 @@
 /*
- * YUI Compressor
- * Author: Julien Lecomte - http://www.julienlecomte.net/
- * Copyright (c) 2009 Yahoo! Inc.  All rights reserved.
- * The copyrights embodied in the content of this file are licensed
- * by Yahoo! Inc. under the BSD (revised) open source license.
+ * YUI Compressor Author: Julien Lecomte - http://www.julienlecomte.net/
+ * Copyright (c) 2009 Yahoo! Inc. All rights reserved. The copyrights embodied
+ * in the content of this file are licensed by Yahoo! Inc. under the BSD
+ * (revised) open source license.
  */
 
 package com.yahoo.platform.yui.compressor;
@@ -41,9 +40,11 @@ public class JarClassLoader extends ClassLoader {
             return jarPath;
         }
 
-        String classname = JarClassLoader.class.getName().replace('.', '/') + ".class";
+        String classname =
+                JarClassLoader.class.getName().replace('.', '/') + ".class";
         String classpath = System.getProperty("java.class.path");
-        String classpaths[] = classpath.split(System.getProperty("path.separator"));
+        String classpaths[] =
+                classpath.split(System.getProperty("path.separator"));
 
         for (int i = 0; i < classpaths.length; i++) {
 
@@ -54,13 +55,16 @@ public class JarClassLoader extends ClassLoader {
             try {
                 jarFile = new JarFile(path);
                 jarEntry = findJarEntry(jarFile, classname);
-            } catch (IOException ioe) {
+            }
+            catch (IOException ioe) {
                 /* ignore */
-            } finally {
+            }
+            finally {
                 if (jarFile != null) {
                     try {
                         jarFile.close();
-                    } catch (IOException ioe) {
+                    }
+                    catch (IOException ioe) {
                         /* ignore */
                     }
                 }
@@ -99,13 +103,16 @@ public class JarClassLoader extends ClassLoader {
             try {
                 jarFile = new JarFile(jarPath);
                 c = loadClassData(jarFile, name);
-            } catch (IOException ioe) {
+            }
+            catch (IOException ioe) {
                 /* ignore */
-            } finally {
+            }
+            finally {
                 if (jarFile != null) {
                     try {
                         jarFile.close();
-                    } catch (IOException ioe) {
+                    }
+                    catch (IOException ioe) {
                         /* ignore */
                     }
                 }
@@ -140,7 +147,8 @@ public class JarClassLoader extends ClassLoader {
             copy(is, os);
             byte[] bytes = os.toByteArray();
             c = defineClass(className, bytes, 0, bytes.length);
-        } catch (IOException ioe) {
+        }
+        catch (IOException ioe) {
             /* ignore */
         }
 
@@ -151,7 +159,8 @@ public class JarClassLoader extends ClassLoader {
         byte[] buf = new byte[1024];
         while (true) {
             int len = in.read(buf);
-            if (len < 0) break;
+            if (len < 0)
+                break;
             out.write(buf, 0, len);
         }
     }

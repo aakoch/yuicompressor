@@ -1,9 +1,8 @@
 /*
- * YUI Compressor
- * Author: Julien Lecomte - http://www.julienlecomte.net/
- * Copyright (c) 2009 Yahoo! Inc.  All rights reserved.
- * The copyrights embodied in the content of this file are licensed
- * by Yahoo! Inc. under the BSD (revised) open source license.
+ * YUI Compressor Author: Julien Lecomte - http://www.julienlecomte.net/
+ * Copyright (c) 2009 Yahoo! Inc. All rights reserved. The copyrights embodied
+ * in the content of this file are licensed by Yahoo! Inc. under the BSD
+ * (revised) open source license.
  */
 
 package com.yahoo.platform.yui.compressor;
@@ -40,7 +39,8 @@ class ScriptOrFnScope {
     }
 
     JavaScriptIdentifier declareIdentifier(String symbol) {
-        JavaScriptIdentifier identifier = (JavaScriptIdentifier) identifiers.get(symbol);
+        JavaScriptIdentifier identifier =
+                (JavaScriptIdentifier) identifiers.get(symbol);
         if (identifier == null) {
             identifier = new JavaScriptIdentifier(symbol, this);
             identifiers.put(symbol, identifier);
@@ -68,7 +68,8 @@ class ScriptOrFnScope {
         ArrayList result = new ArrayList();
         Enumeration elements = identifiers.elements();
         while (elements.hasMoreElements()) {
-            JavaScriptIdentifier identifier = (JavaScriptIdentifier) elements.nextElement();
+            JavaScriptIdentifier identifier =
+                    (JavaScriptIdentifier) elements.nextElement();
             String mungedValue = identifier.getMungedValue();
             if (mungedValue == null) {
                 mungedValue = identifier.getValue();
@@ -120,7 +121,8 @@ class ScriptOrFnScope {
                 freeSymbols.removeAll(getAllUsedSymbols());
             }
             if (freeSymbols.size() == 0) {
-                throw new IllegalStateException("The YUI Compressor ran out of symbols. Aborting...");
+                throw new IllegalStateException(
+                        "The YUI Compressor ran out of symbols. Aborting...");
             }
 
             Enumeration elements = identifiers.elements();
@@ -129,10 +131,13 @@ class ScriptOrFnScope {
                     pickFromSet++;
                     if (pickFromSet == 2) {
                         freeSymbols.addAll(JavaScriptCompressor.twos);
-                    } else if (pickFromSet == 3) {
+                    }
+                    else if (pickFromSet == 3) {
                         freeSymbols.addAll(JavaScriptCompressor.threes);
-                    } else {
-                        throw new IllegalStateException("The YUI Compressor ran out of symbols. Aborting...");
+                    }
+                    else {
+                        throw new IllegalStateException(
+                                "The YUI Compressor ran out of symbols. Aborting...");
                     }
                     // It is essential to remove the symbols already used in
                     // the containing scopes, or some of the variables declared
@@ -142,10 +147,12 @@ class ScriptOrFnScope {
                 }
 
                 String mungedValue;
-                JavaScriptIdentifier identifier = (JavaScriptIdentifier) elements.nextElement();
+                JavaScriptIdentifier identifier =
+                        (JavaScriptIdentifier) elements.nextElement();
                 if (identifier.isMarkedForMunging()) {
                     mungedValue = (String) freeSymbols.remove(0);
-                } else {
+                }
+                else {
                     mungedValue = identifier.getValue();
                 }
                 identifier.setMungedValue(mungedValue);
