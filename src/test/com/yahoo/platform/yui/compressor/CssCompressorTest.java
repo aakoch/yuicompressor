@@ -27,6 +27,11 @@ public class CssCompressorTest {
         assertEquals("body{color:red}", compress("body{color:#f00}"));
     }
     
+    @Test
+    public void testRedUppercase() throws IOException {
+        assertEquals("body{color:red}", compress("body{color:#F00}"));
+    }
+    
     private String compress(String css) throws IOException {
         CssCompressor compressor = new CssCompressor(css);
         Writer out = new StringWriter();

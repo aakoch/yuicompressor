@@ -295,7 +295,7 @@ public class CssCompressor {
 
 
         // Replace #f00 with red
-        css = css.replaceAll("#f00", "red");
+        css = css.replaceAll("#[fF]00", "red");
 
         // Replace multiple semi-colons in a row by a single one
         // See SF bug #1980989
