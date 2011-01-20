@@ -28,7 +28,6 @@ public class CssCompressor {
     }
 
     public void compress(Writer out, int linebreakpos) throws IOException {
-
         Pattern p;
         Matcher m;
         String css = srcsb.toString();
@@ -133,14 +132,10 @@ public class CssCompressor {
                 if (startIndex > 2) {
                     if (css.charAt(startIndex - 3) == '>') {
                         preservedTokens.add("");
-                        css =
-                                css
-                                        .replace(
-                                                 placeholder,
-                                                 "___YUICSSMIN_PRESERVED_TOKEN_" +
-                                                         (preservedTokens
-                                                                 .size() - 1) +
-                                                         "___");
+                        css = css.replace(placeholder,
+                                 "___YUICSSMIN_PRESERVED_TOKEN_" +
+                                         (preservedTokens.size() - 1) +
+                                         "___");
                     }
                 }
             }
@@ -202,9 +197,7 @@ public class CssCompressor {
         // Replace background-position:0; with background-position:0 0;
         // same for transform-origin
         sb = new StringBuffer();
-        p =
-                Pattern
-                        .compile("(?i)(background-position|transform-origin|webkit-transform-origin|moz-transform-origin|o-transform-origin|ms-transform-origin):0(;|})");
+        p = Pattern.compile("(?i)(background-position|transform-origin|webkit-transform-origin|moz-transform-origin|o-transform-origin|ms-transform-origin):0(;|})");
         m = p.matcher(css);
         while (m.find()) {
             m.appendReplacement(sb, m.group(1).toLowerCase() + ":0 0" +
@@ -262,23 +255,17 @@ public class CssCompressor {
 
         // border: none -> border:0
         sb = new StringBuffer();
-        p =
-                Pattern
-                        .compile("(?i)(border|border-top|border-right|border-bottom|border-right|outline|background):none(;|})");
+        p = Pattern.compile("(?i)(border|border-top|border-right|border-bottom|border-right|outline|background):none(;|})");
         m = p.matcher(css);
         while (m.find()) {
-            m.appendReplacement(sb, m.group(1).toLowerCase() + ":0" +
-                    m.group(2));
+            m.appendReplacement(sb, m.group(1).toLowerCase() + ":0" + m.group(2));
         }
         m.appendTail(sb);
         css = sb.toString();
 
         // shorter opacity IE filter
-        css =
-                css
-                        .replaceAll(
-                                    "(?i)progid:DXImageTransform.Microsoft.Alpha\\(Opacity=",
-                                    "alpha(opacity=");
+        css = css.replaceAll("(?i)progid:DXImageTransform.Microsoft.Alpha\\(Opacity=",
+                            "alpha(opacity=");
 
         // Remove empty rules.
         css = css.replaceAll("[^\\}\\{/;]+\\{\\}", "");
@@ -307,9 +294,8 @@ public class CssCompressor {
 
         // restore preserved comments and strings
         for (i = 0, max = preservedTokens.size(); i < max; i++) {
-            css =
-                    css.replace("___YUICSSMIN_PRESERVED_TOKEN_" + i + "___",
-                                preservedTokens.get(i).toString());
+            css = css.replace("___YUICSSMIN_PRESERVED_TOKEN_" + i + "___",
+                        preservedTokens.get(i).toString());
         }
 
         // Trim the final string (for any leading or trailing white spaces)
